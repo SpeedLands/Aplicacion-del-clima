@@ -229,6 +229,71 @@ class CollapsibleWeatherHeader extends StatelessWidget {
       );
     }
 
+    void showAuthDialog(BuildContext context, WeatherController controller) {
+      final emailCtrl = TextEditingController();
+      final passCtrl = TextEditingController();
+
+      showDialog(
+        context: context,
+        builder: (context) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Iniciar sesión / Registro",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 16),
+                  TextField(
+                    controller: emailCtrl,
+                    decoration: InputDecoration(
+                      labelText: "Correo",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  TextField(
+                    controller: passCtrl,
+                    decoration: InputDecoration(
+                      labelText: "Contraseña",
+                      border: OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          controller.login(emailCtrl.text, passCtrl.text);
+                          Navigator.pop(context);
+                        },
+                        child: Text("Login"),
+                      ),
+                      OutlinedButton(
+                        onPressed: () {
+                          controller.register(emailCtrl.text, passCtrl.text);
+                          Navigator.pop(context);
+                        },
+                        child: Text("Registro"),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
     return SliverAppBar(
       pinned: true,
       stretch: true,
@@ -274,6 +339,25 @@ class CollapsibleWeatherHeader extends StatelessWidget {
               // Get.back()
               controller.getCurrentLocationWeather();
               showSearchingSnackbar(context, 'Obteniendo ubicación actual...');
+            },
+          ),
+        ),
+        Obx(
+          () => IconButton(
+            icon: Icon(
+              controller.isLoggedIn ? Icons.logout : Icons.person,
+              color: controller.isAppBarCollapsed.value
+                  ? Colors.black
+                  : Colors.white,
+            ),
+            onPressed: () {
+              if (controller.isLoggedIn) {
+                // Cerrar sesión directo
+                controller.logout();
+              } else {
+                // Mostrar diálogo de login/registro
+                showAuthDialog(context, controller);
+              }
             },
           ),
         ),

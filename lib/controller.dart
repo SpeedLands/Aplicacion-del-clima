@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clima/core/local_db_service.dart';
 import 'package:clima/data.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -12,6 +13,34 @@ class WeatherController extends GetxController {
   var errorMessage = ''.obs;
   var selectedTabIndex = 0.obs;
   var isAppBarCollapsed = false.obs;
+
+  var currentUser = Rxn<Map<String, dynamic>>();
+
+  Future<void> register(String email, String password) async {
+    final id = await LocalDBService.registerUser(email, password);
+    if (id > 0) {
+      Get.snackbar("Éxito", "Usuario registrado");
+    } else {
+      Get.snackbar("Error", "Ese usuario ya existe");
+    }
+  }
+
+  Future<void> login(String email, String password) async {
+    final user = await LocalDBService.loginUser(email, password);
+    if (user != null) {
+      currentUser.value = user;
+      Get.snackbar("Éxito", "Sesión iniciada como ${user['email']}");
+    } else {
+      Get.snackbar("Error", "Credenciales incorrectas");
+    }
+  }
+
+  void logout() {
+    currentUser.value = null;
+    Get.snackbar("Sesión cerrada", "Vuelve pronto");
+  }
+
+  bool get isLoggedIn => currentUser.value != null;
 
   // Getter para obtener los datos de la pestaña actual
   TabWeatherData? get currentTabData {
