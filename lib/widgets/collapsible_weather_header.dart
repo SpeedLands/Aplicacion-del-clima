@@ -421,67 +421,68 @@ class CollapsibleWeatherHeader extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // DATO: Temperatura
-                            Text(
-                              '${weatherData.temperature}',
-                              style: const TextStyle(
-                                fontSize: 112,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white,
-                                height: 0.57,
-                              ),
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.only(top: 10.0),
-                              child: Text(
-                                '°',
-                                style: TextStyle(
-                                  fontSize: 112,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.white,
-                                  height: 0.57,
+                            Column(
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${weatherData.temperature}',
+                                      style: const TextStyle(
+                                        fontSize: 112,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.white,
+                                        height: 0.57,
+                                      ),
+                                    ),
+                                    Text(
+                                      '°',
+                                      style: TextStyle(
+                                        fontSize: 112,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.white,
+                                        height: 0.57,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
+                                const SizedBox(height: 18),
+                                Text(
+                                  'Sensación Térmica ${weatherData.feelsLike}°',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.33,
+                                    letterSpacing: 0.15,
+                                  ),
+                                ),
+                              ],
                             ),
                             const Spacer(),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 10.0),
-                              child: Column(
-                                children: [
-                                  // DATO: Icono de la condición
-                                  Icon(
-                                    weatherData.conditionIcon,
+                            Column(
+                              children: [
+                                getWeatherIcon(
+                                  code: weatherData.weatherCode,
+                                  isDay: weatherData.isDay,
+                                  size: 107,
+                                ),
+                                const SizedBox(height: 18),
+                                Text(
+                                  weatherData.condition,
+                                  style: const TextStyle(
                                     color: Colors.white,
-                                    size: 50,
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.33,
+                                    letterSpacing: 0.15,
+                                    fontSize: 16,
                                   ),
-                                  const SizedBox(height: 5),
-                                  // DATO: Texto de la condición
-                                  Text(
-                                    weatherData.condition,
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.33,
-                                      letterSpacing: 0.15,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        SizedBox(height: 18),
                         // DATO: Sensación térmica
-                        Text(
-                          'Sensación Térmica ${weatherData.feelsLike}°',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            height: 1.33,
-                            letterSpacing: 0.15,
-                          ),
-                        ),
                         const Spacer(),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

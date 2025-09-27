@@ -1,12 +1,15 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class WeatherData {
   final String location;
   final int temperature;
   final String condition;
-  final IconData conditionIcon;
+  final Widget conditionIcon;
+  final int weatherCode;
+  final bool isDay;
   final int feelsLike;
   final String date;
   final int dayTemp;
@@ -40,6 +43,8 @@ class WeatherData {
     required this.condition,
     required this.conditionIcon,
     required this.feelsLike,
+    required this.weatherCode,
+    required this.isDay,
     required this.date,
     required this.dayTemp,
     required this.nightTemp,
@@ -134,11 +139,8 @@ class WeatherData {
       todayForecast.add(
         ForecastItem(
           time: isCurrentHour ? 'Ahora' : DateFormat('ha').format(time),
-          weatherIcon: _getIconForCode(hourlyWeatherCodes[i]),
-          iconColor: _getColorForCode(
-            hourlyWeatherCodes[i],
-            time.hour > 6 && time.hour < 19,
-          ),
+          weatherCode: hourlyWeatherCodes[i] as int,
+          isDay: time.hour > 6 && time.hour < 19,
           temperature: '${(hourlyTemps[i] as num).round()}°',
         ),
       );
@@ -167,11 +169,8 @@ class WeatherData {
           tomorrowForecast.add(
             ForecastItem(
               time: DateFormat('ha').format(time),
-              weatherIcon: _getIconForCode(hourlyWeatherCodes[i]),
-              iconColor: _getColorForCode(
-                hourlyWeatherCodes[i],
-                time.hour > 6 && time.hour < 19,
-              ),
+              weatherCode: hourlyWeatherCodes[i] as int,
+              isDay: time.hour > 6 && time.hour < 19,
               temperature: '${(hourlyTemps[i] as num).round()}°',
             ),
           );
@@ -197,8 +196,12 @@ class WeatherData {
           ? _getWeatherDescription(daily['weather_code'][1])
           : 'N/A',
       conditionIcon: daily.length > 1
-          ? _getIconForCode(daily['weather_code'][1])
-          : Icons.help,
+          ? getWeatherIcon(
+              code: daily['weather_code'][1],
+              isDay: true,
+              size: 59.0,
+            )
+          : Icon(Icons.help),
       sunrise: daily.length > 1 ? daily['sunrise'][1] as String : '',
       sunset: daily.length > 1 ? daily['sunset'][1] as String : '',
       uvIndex: daily.length > 1
@@ -240,7 +243,11 @@ class WeatherData {
       location: cityName ?? 'Ubicación actual',
       temperature: (current['temperature_2m'] as num).round(),
       condition: _getWeatherDescription(current['weather_code']),
-      conditionIcon: _getIconForCode(current['weather_code']),
+      conditionIcon: getWeatherIcon(
+        code: current['weather_code'],
+        isDay: current['is_day'] == 1,
+        size: 59.0,
+      ),
       feelsLike: (current['apparent_temperature'] as num).round(),
       date: DateFormat('MMMM d, HH:mm', 'es_ES').format(now),
       dayTemp: (daily['temperature_2m_max'][0] as num).round(),
@@ -266,6 +273,8 @@ class WeatherData {
       rainData: todayRain,
       tomorrowData: tomorrowData,
       extendedWeeklyData: extendedWeeklyData,
+      weatherCode: current['weather_code'],
+      isDay: current['is_day'] == 1,
     );
   }
 
@@ -319,7 +328,7 @@ class WeatherData {
           temperature:
               temperature, // Mantener temperatura actual como referencia
           condition: 'Ver detalles por día',
-          conditionIcon: Icons.calendar_today,
+          conditionIcon: Icon(Icons.calendar_today),
           dayTemp: dayTemp,
           nightTemp: nightTemp,
           sunrise: sunrise,
@@ -341,7 +350,7 @@ class TomorrowData {
   final int dayTemp;
   final int nightTemp;
   final String condition;
-  final IconData conditionIcon;
+  final Widget conditionIcon;
   final String sunrise;
   final String sunset;
   final double uvIndex;
@@ -367,7 +376,7 @@ class TabWeatherData {
   final String date;
   final int temperature;
   final String condition;
-  final IconData conditionIcon;
+  final Widget conditionIcon;
   final int dayTemp;
   final int nightTemp;
   final String sunrise;
@@ -428,24 +437,279 @@ String _getWeatherDescription(int code) {
   return 'Variado';
 }
 
-IconData _getIconForCode(int code) {
-  if (code == 0) return Icons.wb_sunny;
-  if (code <= 3) return Icons.cloud;
-  return Icons.cloud_queue;
-}
+Widget getWeatherIcon({
+  required int code,
+  required bool isDay,
+  double size = 59.0,
+}) {
+  String assetName;
 
-Color _getColorForCode(int code, bool isDay) {
-  if (code == 0 && isDay) return Colors.orange;
-  if (code <= 3) return Colors.grey;
-  return Colors.blueGrey;
-}
+  switch (code) {
+    // --- CIELO DESPEJADO Y NUBES ---
+    case 0: // Despejado
+      assetName = isDay ? 'sunny.svg' : 'clear.svg';
+      break;
+    case 1: // Principalmente despejado
+      assetName = isDay ? 'mostly_sunny.svg' : 'mostly_cloudy_night.svg';
+      break;
+    case 2: // Parcialmente nublado
+      assetName = isDay ? 'mostly_cloudy.svg' : 'mostly_cloudy_night.svg';
+      break;
+    case 3: // Nublado / Cubierto
+      assetName = 'cloudy.svg';
+      break;
 
-String _getWeatherAnimation(int weatherCode, bool isDay) {
-  if (weatherCode == 0) {
-    return isDay ? 'assets/clear.jpg' : 'assets/clear.jpg';
+    // --- NIEBLA ---
+    case 45: // Niebla
+    case 48: // Niebla de cencellada
+      // Aún no tienes un icono para niebla, usamos 'cloudy' como alternativa.
+      assetName = 'cloudy.svg';
+      break;
+
+    // --- LLUVIA Y LLOVIZNA ---
+    case 51: // Llovizna ligera
+    case 53: // Llovizna moderada
+    case 55: // Llovizna densa
+      assetName = 'drizzle.svg';
+      break;
+    case 61: // Lluvia ligera
+    case 80: // Chubascos de lluvia ligeros
+      assetName = 'showers.svg';
+      break;
+    case 63: // Lluvia moderada
+    case 81: // Chubascos de lluvia moderados
+      assetName = 'scattered_showers.svg';
+      break;
+    case 65: // Lluvia fuerte
+    case 82: // Chubascos de lluvia violentos
+      assetName = 'heavy.svg';
+      break;
+
+    // --- NIEVE Y MEZCLA INVERNAL ---
+    case 56: // Llovizna helada ligera
+    case 57: // Llovizna helada densa
+    case 66: // Lluvia helada ligera
+    case 67: // Lluvia helada fuerte
+      assetName = 'wintry_mix.svg'; // O 'sleet_hail.svg' si lo prefieres
+      break;
+    case 71: // Nieve ligera
+    case 77: // Granos de nieve
+      assetName = 'flurries.svg';
+      break;
+    case 73: // Nieve moderada
+      assetName = 'scattered_snow.svg';
+      break;
+    case 75: // Nieve fuerte
+      assetName = 'heavy_snow.svg';
+      break;
+    case 85: // Chubascos de nieve ligeros
+      assetName = 'snow_showers.svg';
+      break;
+    case 86: // Chubascos de nieve fuertes
+      assetName = 'blowing_snow.svg'; // O 'heavy_snow.svg'
+      break;
+
+    // --- TORMENTAS ---
+    case 95: // Tormenta ligera o moderada
+      assetName = 'isolated_tstorms.svg';
+      break;
+    case 96: // Tormenta con granizo ligero
+    case 99: // Tormenta con granizo fuerte
+      assetName = 'strong_tstorms.svg';
+      // Nota: También podrías usar 'sleet_hail.svg' aquí si quieres enfatizar el granizo.
+      break;
+
+    // --- POR DEFECTO ---
+    default:
+      assetName = 'cloudy.svg';
+      break;
   }
-  if (weatherCode <= 3) return 'assets/clear.jpg';
-  return 'assets/clear.jpg';
+
+  return SvgPicture.asset(
+    'assets/icons/$assetName', // Asegúrate que esta ruta coincida con tu pubspec.yaml
+    width: size,
+    height: size,
+  );
+}
+
+// FUNCIÓN PRINCIPAL: Llama a esta para obtener una imagen de fondo
+String _getWeatherAnimation(int weatherCode, bool isDay) {
+  // 1. Obtiene la colección de imágenes para el código de clima actual
+  final imageCollection = _getImageCollectionForCode(weatherCode);
+
+  // 2. Decide si usar la lista de día o de noche
+  final timeKey = isDay ? 'day' : 'night';
+  List<String> imageList = imageCollection[timeKey] ?? [];
+
+  // 3. Si no hay imágenes para la hora actual (ej. no hay de noche), usa las de día como alternativa
+  if (imageList.isEmpty) {
+    imageList = imageCollection['day'] ?? [];
+  }
+
+  // 4. Si aún no hay imágenes, usa una por defecto
+  if (imageList.isEmpty) {
+    return 'assets/backgrounds/desconocido.jpg'; // O una imagen por defecto que prefieras
+  }
+
+  // 5. Elige una imagen al azar de la lista
+  final random = Random();
+  final selectedImage = imageList[random.nextInt(imageList.length)];
+
+  // ¡Asegúrate de que la ruta 'assets/backgrounds/' es correcta!
+  return 'assets/backgrounds/$selectedImage';
+}
+
+// FUNCIÓN DE AYUDA: Mapea los códigos de clima a tus listas de imágenes
+Map<String, List<String>> _getImageCollectionForCode(int code) {
+  switch (code) {
+    // --- DESPEJADO ---
+    case 0:
+      return {
+        'day': [
+          'sunny1.jpg',
+          'sunny2.jpg',
+          'sunny3.jpg',
+          'sunny4.jpg',
+          'sunny5.jpg',
+          'sunny6.jpg',
+          'mostly_sunny1.jpg',
+          'mostly_sunny2.jpg',
+          'mostly_sunny3.jpg',
+        ],
+        'night': [
+          'clear.jpg',
+          'clear1.jpg',
+          'clear2.jpg',
+          'clear3.jpg',
+          'clear_with_periodic_clouds.jpg',
+          'clear_with_periodic_clouds2.jpg',
+        ],
+      };
+
+    // --- PARCIALMENTE NUBLADO ---
+    case 1:
+    case 2:
+      return {
+        'day': [
+          'partly_cloudy_day.jpg',
+          'partly_cloudy2.jpg',
+          'partly_cloudy3.jpg',
+          'partly_cloudy4.jpg',
+          'partly_cloudy5.jpg',
+          'partly_cloudy6.jpg',
+        ],
+        'night': [
+          'partly_cloudy.jpg',
+          'partly_cloudy7.jpg',
+          'partly_cloudy8.jpg',
+        ],
+      };
+
+    // --- NUBLADO ---
+    case 3:
+      return {
+        'day': [
+          'cloudy.jpg',
+          'cloudy1.jpg',
+          'cloudy2.jpg',
+          'mostly_cloudy.jpg',
+          'mostly_cloudy1.jpg',
+          'mostly_cloudy2.jpg',
+          'mostly_cloudy3.jpg',
+          'mostly_cloudy4.jpg',
+          'mostly_cloudy5.jpg',
+        ],
+        'night': [
+          'mostly_cloudy.jpg',
+          'mostly_cloudy2.jpg',
+          'mostly_cloudy3.jpg',
+        ], // Reutilizamos algunas de noche
+      };
+
+    // --- NIEBLA ---
+    case 45:
+    case 48:
+      return {
+        'day': ['fog.jpg'],
+        'night': [
+          'fog.jpg',
+        ], // Puedes buscar una imagen de niebla nocturna si quieres
+      };
+
+    // --- LLOVIZNA Y LLUVIA LIGERA ---
+    case 51:
+    case 53:
+    case 55: // Llovizna
+    case 61: // Lluvia ligera
+      return {
+        'day': [
+          'drizzle.jpg',
+          'light_rain_showers.jpg',
+          'light_rain_showers1.jpg',
+          'light_rain_showers2.jpg',
+          'light_rain_showers3.jpg',
+          'light_rain_showers4.jpg',
+        ],
+        'night': [
+          'light_rain_showers2.jpg',
+          'light_rain_showers3.jpg',
+        ], // Algunas de ciudad funcionan bien de noche
+      };
+
+    // --- LLUVIA MODERADA A FUERTE ---
+    case 63:
+    case 65: // Lluvia moderada a fuerte
+    case 80:
+    case 81:
+    case 82: // Chubascos
+      return {
+        'day': ['rain.jpg', 'heavy_rain.jpg', 'heavy_rain1.jpg'],
+        'night': ['heavy_rain1.jpg'],
+      };
+
+    // --- MEZCLA INVERNAL (AGUANIEVE, LLUVIA HELADA) ---
+    case 56:
+    case 57: // Llovizna helada
+    case 66:
+    case 67: // Lluvia helada
+      return {
+        'day': ['sleet.jpg', 'ice_crystals.jpg'],
+        'night': ['sleet.jpg', 'ice_crystals.jpg'],
+      };
+
+    // --- NIEVE ---
+    case 71:
+    case 73:
+    case 75:
+    case 77: // Nieve
+    case 85:
+    case 86: // Chubascos de nieve
+      return {
+        'day': [
+          'light_snow.jpg',
+          'light_snow1.jpg',
+          'light_snow2.jpg',
+          'low_drifting_snow.jpg',
+        ],
+        'night': ['light_snow1.jpg', 'light_snow2.jpg'],
+      };
+
+    // --- TORMENTAS ---
+    case 95:
+    case 96:
+    case 99:
+      return {
+        'day': ['thunderstorm.jpg', 'squalls.jpg'],
+        'night': ['thunderstorm.jpg'],
+      };
+
+    // --- CASO POR DEFECTO ---
+    default:
+      return {
+        'day': ['partly_cloudy_day.jpg'],
+        'night': ['partly_cloudy.jpg'],
+      };
+  }
 }
 
 class RainData {
@@ -456,13 +720,13 @@ class RainData {
 
 class ForecastItem {
   final String time;
-  final IconData weatherIcon;
-  final Color iconColor;
+  final int weatherCode; // <-- Guardamos el código
+  final bool isDay;
   final String temperature;
   ForecastItem({
     required this.time,
-    required this.weatherIcon,
-    required this.iconColor,
+    required this.weatherCode,
+    required this.isDay,
     required this.temperature,
   });
 }

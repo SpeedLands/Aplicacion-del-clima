@@ -57,16 +57,31 @@ class WeatherScreen extends StatelessWidget {
       }
       if (weatherController.errorMessage.value.isNotEmpty &&
           weatherController.weatherData.value == null) {
-        // Muestra un mensaje de error si algo falló.
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Text(
-              'Error: ${weatherController.errorMessage.value}',
-              textAlign: TextAlign.center,
-            ),
-          ),
-        );
+        final errorMessage = weatherController.errorMessage.value.toLowerCase();
+
+        // Comprueba si el error es por falta de conexión a internet
+        if (errorMessage.contains('socketexception') ||
+            errorMessage.contains('failed host lookup')) {
+          return ErrorDisplayWidget(
+            imagePath:
+                'assets/backgrounds/offline.jpg', // ¡Asegúrate que la ruta es correcta!
+            title: 'Sin Conexión',
+            message:
+                'Parece que no tienes internet. Por favor, revisa tu conexión.',
+            onRetry: () => weatherController
+                .getCurrentLocationWeather(), // Asumiendo que esta es tu función para recargar
+          );
+        } else {
+          // Para cualquier otro tipo de error (API, permisos, etc.)
+          return ErrorDisplayWidget(
+            imagePath:
+                'assets/backgrounds/desconocido.jpg', // ¡Asegúrate que la ruta es correcta!
+            title: '¡Oh, no!',
+            message:
+                'Ocurrió un error inesperado al obtener los datos del clima.',
+            onRetry: () => weatherController.getCurrentLocationWeather(),
+          );
+        }
       }
 
       final data = weatherController.weatherData.value!;
@@ -173,11 +188,7 @@ class WeatherScreen extends StatelessWidget {
                                 ],
                               ),
                               Spacer(),
-                              Icon(
-                                currentTabData.conditionIcon,
-                                color: Colors.black.withValues(alpha: 0.8),
-                                size: 50,
-                              ),
+                              currentTabData.conditionIcon,
                             ],
                           ),
                         Row(
@@ -459,10 +470,12 @@ class WeatherScreen extends StatelessWidget {
                     ),
 
                     // Ícono del clima
-                    Icon(
-                      _getIconForWeatherCode(day.weatherCode),
-                      color: Colors.black.withValues(alpha: 0.7),
-                      size: 28,
+                    getWeatherIcon(
+                      code: day.weatherCode,
+                      isDay:
+                          true, // Para el pronóstico semanal, es más claro usar siempre los íconos de día
+                      size:
+                          32, // Ajusta el tamaño como prefieras, 32 podría verse mejor que 28
                     ),
                     SizedBox(width: 16),
 
@@ -544,16 +557,81 @@ class WeatherScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  IconData _getIconForWeatherCode(int weatherCode) {
-    if (weatherCode == 0) return Icons.wb_sunny;
-    if (weatherCode <= 3) return Icons.cloud;
-    if (weatherCode <= 48) return Icons.foggy;
-    if (weatherCode <= 67) return Icons.grain;
-    if (weatherCode <= 77) return Icons.ac_unit;
-    if (weatherCode <= 82) return Icons.shower;
-    if (weatherCode <= 86) return Icons.snowing;
-    if (weatherCode <= 99) return Icons.thunderstorm;
-    return Icons.wb_sunny;
+// Coloca esta nueva clase en tu archivo
+
+class ErrorDisplayWidget extends StatelessWidget {
+  final String imagePath;
+  final String title;
+  final String message;
+  final VoidCallback onRetry;
+
+  const ErrorDisplayWidget({
+    super.key,
+    required this.imagePath,
+    required this.title,
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF3F4F8), // Un color de fondo suave
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // La imagen de la ranita
+              Image.asset(imagePath, height: 200, fit: BoxFit.contain),
+              const SizedBox(height: 24),
+
+              // Título del error
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Mensaje del error
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16, color: Colors.black54),
+              ),
+              const SizedBox(height: 32),
+
+              // Botón para reintentar
+              ElevatedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                label: const Text(
+                  'Volver a intentar',
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 140, 93, 201),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

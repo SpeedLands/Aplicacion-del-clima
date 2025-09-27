@@ -60,18 +60,10 @@ class WeatherForecastCard extends StatelessWidget {
                       SizedBox(height: 8),
 
                       // Ícono del clima
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: forecast.iconColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          forecast.weatherIcon,
-                          color: Colors.white,
-                          size: 16,
-                        ),
+                      getWeatherIcon(
+                        code: forecast.weatherCode,
+                        isDay: forecast.isDay,
+                        size: 32, // Tamaño del icono dentro del círculo
                       ),
 
                       // Temperatura

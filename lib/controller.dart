@@ -158,35 +158,6 @@ class WeatherController extends GetxController {
     }
   }
 
-  String getWeatherAnimation(int weatherCode, bool isDay) {
-    // Mapear códigos de clima a las animaciones/ilustraciones
-    if (weatherCode == 0) {
-      return isDay ? 'sunny' : 'clear';
-    }
-    if (weatherCode <= 3) {
-      return isDay ? 'partly_cloudy_day' : 'partly_cloudy';
-    }
-    if (weatherCode <= 48) return 'drizzle';
-    if (weatherCode <= 67) return 'rain';
-    if (weatherCode <= 77) return 'heavy_rain';
-    if (weatherCode <= 82) return 'rain';
-    if (weatherCode <= 86) return 'squalls';
-    if (weatherCode <= 99) return 'thunderstorm';
-    return 'mostly_sunny';
-  }
-
-  String getWeatherDescription(int weatherCode) {
-    if (weatherCode == 0) return 'Despejado';
-    if (weatherCode <= 3) return 'Parcialmente nublado';
-    if (weatherCode <= 48) return 'Niebla';
-    if (weatherCode <= 67) return 'Lluvia';
-    if (weatherCode <= 77) return 'Nieve';
-    if (weatherCode <= 82) return 'Chubascos';
-    if (weatherCode <= 86) return 'Chubascos de nieve';
-    if (weatherCode <= 99) return 'Tormenta';
-    return 'Variado';
-  }
-
   void changeTab(int index) {
     selectedTabIndex(index);
   }
