@@ -119,7 +119,7 @@ class WeatherData {
         : _formatDuration(sunriseTime.difference(now), 'en');
     final calculatedSunsetChange = now.isBefore(sunsetTime)
         ? _formatDuration(sunsetTime.difference(now), 'en')
-        : _formatDuration(now.difference(sunsetTime), 'finalizó hace');
+        : _formatDuration(now.difference(sunsetTime), 'hace');
 
     // Datos para HOY
     final List<ForecastItem> todayForecast = [];

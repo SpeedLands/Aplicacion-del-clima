@@ -7,6 +7,9 @@ environment:
   sdk: ^3.9.0
 
 dependencies:
+  cloud_firestore: ^6.0.2
+  firebase_auth: ^6.1.0
+  firebase_core: ^4.1.1
   flutter:
     sdk: flutter
   flutter_svg: ^2.2.1
@@ -15,7 +18,6 @@ dependencies:
   http: ^1.5.0
   intl: ^0.20.2
   path: ^1.9.1
-  sqflite: ^2.4.2
 
 dev_dependencies:
   flutter_test:

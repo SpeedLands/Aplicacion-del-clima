@@ -1,6 +1,7 @@
 import 'package:clima/controller.dart';
 import 'package:clima/data.dart';
 import 'package:clima/widgets/collapsible_weather_header.dart';
+import 'package:clima/widgets/login_screen.dart';
 import 'package:clima/widgets/persistent_header_delegate.dart';
 import 'package:clima/widgets/rain_probability_card.dart';
 import 'package:clima/widgets/weather_card.dart';
@@ -11,9 +12,14 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
   await initializeDateFormatting('es_ES', null);
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -33,7 +39,11 @@ class MyApp extends StatelessWidget {
 
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const WeatherScreen(),
+      home: Obx(
+        () => Get.find<WeatherController>().isLoggedIn
+            ? const WeatherScreen()
+            : LoginRegisterScreen(),
+      ),
       initialBinding: BindingsBuilder(() {
         Get.put(WeatherController());
       }),

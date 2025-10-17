@@ -1,7 +1,6 @@
 import 'dart:convert';
-
-import 'package:clima/core/local_db_service.dart';
 import 'package:clima/data.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -14,28 +13,46 @@ class WeatherController extends GetxController {
   var selectedTabIndex = 0.obs;
   var isAppBarCollapsed = false.obs;
 
-  var currentUser = Rxn<Map<String, dynamic>>();
+  var currentUser = Rxn<User>();
+
+  @override
+  void onInit() {
+    super.onInit();
+    initUser();
+    getCurrentLocationWeather();
+  }
+
+  void initUser() {
+    currentUser.value = FirebaseAuth.instance.currentUser;
+  }
 
   Future<void> register(String email, String password) async {
-    final id = await LocalDBService.registerUser(email, password);
-    if (id > 0) {
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
       Get.snackbar("Éxito", "Usuario registrado");
-    } else {
-      Get.snackbar("Error", "Ese usuario ya existe");
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar("Error", e.message ?? "Error al registrar");
     }
   }
 
   Future<void> login(String email, String password) async {
-    final user = await LocalDBService.loginUser(email, password);
-    if (user != null) {
-      currentUser.value = user;
-      Get.snackbar("Éxito", "Sesión iniciada como ${user['email']}");
-    } else {
-      Get.snackbar("Error", "Credenciales incorrectas");
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      currentUser.value = credential.user;
+      Get.snackbar("Éxito", "Sesión iniciada como ${credential.user?.email}");
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar("Error", e.message ?? "Credenciales incorrectas");
     }
   }
 
   void logout() {
+    FirebaseAuth.instance.signOut();
     currentUser.value = null;
     Get.snackbar("Sesión cerrada", "Vuelve pronto");
   }
@@ -56,12 +73,6 @@ class WeatherController extends GetxController {
 
   // Lista de títulos para las pestañas
   List<String> get tabTitles => ['Hoy', 'Mañana', 'Próximos días'];
-
-  @override
-  void onInit() {
-    super.onInit();
-    getCurrentLocationWeather();
-  }
 
   Future<void> getCurrentLocationWeather() async {
     isLoading(true);

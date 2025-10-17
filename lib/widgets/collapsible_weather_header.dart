@@ -12,7 +12,7 @@ class CollapsibleWeatherHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final WeatherController controller = Get.find<WeatherController>();
 
-    const double expandedHeight = 410.0;
+    const double expandedHeight = 360.0;
     final double collapsedHeight =
         kToolbarHeight + MediaQuery.of(context).padding.top;
 
