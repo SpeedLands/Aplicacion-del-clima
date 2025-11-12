@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class WeatherData {
+  final double latitude;
+  final double longitude;
   final String location;
   final int temperature;
   final String condition;
@@ -38,6 +40,8 @@ class WeatherData {
   final List<DayForecast> extendedWeeklyData;
 
   WeatherData({
+    required this.latitude,
+    required this.longitude,
     required this.location,
     required this.temperature,
     required this.condition,
@@ -240,6 +244,8 @@ class WeatherData {
     }
 
     return WeatherData(
+      latitude: json['latitude'],
+      longitude: json['longitude'],
       location: cityName ?? 'Ubicación actual',
       temperature: (current['temperature_2m'] as num).round(),
       condition: _getWeatherDescription(current['weather_code']),

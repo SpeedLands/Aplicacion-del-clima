@@ -86,17 +86,43 @@ class WeatherController extends GetxController {
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          throw Exception('Permisos de ubicación denegados');
+        // Show our custom dialog FIRST
+        final bool didAgree = await _showLocationPermissionDialog();
+        if (didAgree) {
+          // If user agreed, then request the system permission
+          permission = await Geolocator.requestPermission();
+          if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+            // If they still deny it after agreeing, throw the exception to trigger the fallback
+            throw Exception('Permisos de ubicación denegados');
+          }
+        } else {
+          // If user did not agree in our dialog, throw the exception to trigger the fallback
+          throw Exception('Permisos de ubicación denegados por el usuario');
         }
       }
+
+      if (permission == LocationPermission.deniedForever) {
+          throw Exception('Los permisos de ubicación están denegados permanentemente.');
+      }
+
 
       Position position = await Geolocator.getCurrentPosition();
       await fetchWeatherData(position.latitude, position.longitude);
     } catch (e) {
       errorMessage('Error obteniendo ubicación: $e');
       isLoading(false);
+
+      // Show a user-friendly snackbar
+      Get.snackbar(
+        'Ubicación no disponible',
+        'No pudimos acceder a tu ubicación. Mostrando el clima para una ciudad por defecto.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.black54,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(10),
+        borderRadius: 8,
+      );
+
       // Usar coordenadas por defecto (Piedras Negras, Coahuila)
       await fetchWeatherData(
         28.7003,
@@ -286,5 +312,42 @@ class WeatherController extends GetxController {
       default:
         return '';
     }
+  }
+
+  Future<bool> _showLocationPermissionDialog() async {
+    final context = Get.context;
+    if (context == null) return false;
+
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false, // User must choose an option
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Permiso de Ubicación'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                    'Para mostrarte el clima de tu ubicación actual, nuestra app necesita acceder a tu GPS. Tu ubicación solo se usará para este fin. ¿Deseas continuar?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop(false); // User did not agree
+              },
+            ),
+            TextButton(
+              child: const Text('Continuar'),
+              onPressed: () {
+                Navigator.of(context).pop(true); // User agreed
+              },
+            ),
+          ],
+        );
+      },
+    ) ?? false; // In case the dialog is dismissed, default to false
   }
 }

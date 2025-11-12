@@ -9,9 +9,11 @@ import 'package:clima/widgets/weather_forecast_card.dart';
 import 'package:clima/widgets/weekly_forecast_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong2.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -307,6 +309,7 @@ class WeatherScreen extends StatelessWidget {
           uvChange: '- ${data.uvChange}',
           cardColor: Color(0x4CD0BCFF),
         ),
+        _buildLocationMap(data),
         SizedBox(height: 16),
         WeatherForecastCard(forecastData: currentTabData.forecastData),
         SizedBox(height: 16),
@@ -563,6 +566,56 @@ class WeatherScreen extends StatelessWidget {
             color: Colors.black,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationMap(WeatherData data) {
+    final lat = data.latitude;
+    final lon = data.longitude;
+
+    return Container(
+      height: 200,
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: LatLng(lat, lon),
+            initialZoom: 13.0,
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              subdomains: const ['a', 'b', 'c'],
+            ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                  width: 80.0,
+                  height: 80.0,
+                  point: LatLng(lat, lon),
+                  child: const Icon(
+                    Icons.location_pin,
+                    color: Colors.red,
+                    size: 40,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
