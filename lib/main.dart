@@ -595,6 +595,9 @@ class WeatherScreen extends StatelessWidget {
           options: MapOptions(
             initialCenter: LatLng(lat, lon),
             initialZoom: 13.0,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.drag | InteractiveFlag.flingAnimation | InteractiveFlag.tap,
+            ),
             onTap: (tapPosition, point) {
               final weatherController = Get.find<WeatherController>();
               weatherController.fetchWeatherData(point.latitude, point.longitude);
