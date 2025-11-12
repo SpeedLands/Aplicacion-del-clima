@@ -595,11 +595,15 @@ class WeatherScreen extends StatelessWidget {
           options: MapOptions(
             initialCenter: LatLng(lat, lon),
             initialZoom: 13.0,
+            onTap: (tapPosition, point) {
+              final weatherController = Get.find<WeatherController>();
+              weatherController.fetchWeatherData(point.latitude, point.longitude);
+            },
           ),
           children: [
             TileLayer(
-              urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              subdomains: const ['a', 'b', 'c'],
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.clima',
             ),
             MarkerLayer(
               markers: [
