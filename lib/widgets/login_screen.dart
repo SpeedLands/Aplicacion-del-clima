@@ -84,7 +84,9 @@ class LoginRegisterScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
-      color: Colors.white.withOpacity(0.95), // Fondo ligeramente transparente
+      color: Colors.white.withValues(
+        alpha: 0.95,
+      ), // Fondo ligeramente transparente
       elevation: 10,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
@@ -181,7 +183,7 @@ class LoginRegisterScreen extends StatelessWidget {
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: primaryColor.withOpacity(0.7)),
+        prefixIcon: Icon(icon, color: primaryColor.withValues(alpha: 0.7)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide.none,
